@@ -1,0 +1,9 @@
+[package]
+name = "brainfuck_interpreter"
+version = "0.1.0"
+authors = ["Anthony Defranceschi <chaacygg@gmail.com>"]
+edition = "2018"
+
+[dependencies.nom]
+version = "4.2.3"
+features = ["verbose-errors"]
