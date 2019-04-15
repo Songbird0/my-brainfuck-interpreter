@@ -1,36 +1,15 @@
 use std::fmt;
+use crate::parser::ast::Row;
 
-use nom::is_alphanumeric;
+pub mod ast;
 
-/// "horizontal" whitespaces are 0x20 and 0x09.
-fn is_horizontal_whitespace(chr: u8) -> bool {
-    let tmp = chr as char;
-    tmp == ' ' || tmp == '\t'
-}
 
-/// A line is a string of alphanumeric (and non-alphanumeric like
-/// whitespace, except `\n` and `\r`) characters optionally ended by `\n` or `\r\n`.
-///
-/// A line may be a simple `\n` too.
-fn lines(input: &[u8]) -> nom::IResult<&[u8], Vec<Line<T>>, u32> {
-    // What is a line?
-    let (i1, line_content) = try_parse!(
-      opt!(
-        alt!(
-          take_while!(is_alpanumeric) |
-          take_while!(is_horizontal_whitespace)
-        )
-      )
-    );
-    std::dbg!(i1);
-    std::dbg!(line_content);
-    let (i2, line_separator) = try_parse!(
-      opt!(
-        alt!(
-          complete!(tag!("\n")) | complete!(tag!("\r\n"))
-        )
-      )
-    );
+/// Get all rows found by the parser.
+fn rows(input: &[u8]) -> nom::IResult<&[u8], Vec<ast::Row>, u32> {
+    // What is a row?
+
+
+    unimplemented!()
 }
 
 pub enum ReservedWord {
