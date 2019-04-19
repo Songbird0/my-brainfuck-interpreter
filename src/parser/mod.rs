@@ -1,6 +1,6 @@
 use std::fmt;
 
-use nom::is_alphanumeric;
+use nom::{is_alphanumeric, AsBytes};
 
 pub enum ReservedWord {
     /// `>`
@@ -58,12 +58,10 @@ struct Interpreter<'program> {
 
 
 /// "Moves" the pointer to the right.
-fn right<'program>(interpreter: &mut Interpreter, input: &'program [u8]) -> nom::IResult<&'program [u8], &'program [u8], u32> {
-    // The stream result will be useful later (future version)
-    // for error report tracking.
-    let (i, o) = try_parse!(input, tag!(">"));
+fn right(interpreter: Interpreter) -> Interpreter {
+    let mut interpreter = interpreter;
     interpreter.ram_ptr += 1;
-    Ok((i, o))
+    interpreter
 }
 
 #[test]
@@ -81,18 +79,19 @@ fn right_a_simple_token() {
         program_ptr: 0,
         stack: vec![],
     };
-    assert_eq!(right(&mut interpreter, ">".as_bytes()), Ok(("".as_bytes(), ">".as_bytes())));
+
+    let mut interpreter = right(interpreter);
     assert_eq!(interpreter.ram_ptr, 1);
 }
 
-fn left<'program, 'func>(interpreter: &'func mut Interpreter, input: &'program [u8]) -> nom::IResult<&'program [u8], &'program [u8], u32> {
+fn left(interpreter: Interpreter) -> Interpreter {
     if interpreter.ram_ptr == 0 {
         // We cannot decrement `ptr` anymore.
         panic!("Your pointer is out of bound (negative)");
     }
-    let (i, o) = try_parse!(input, tag!("<"));
+    let mut interpreter = interpreter;
     interpreter.ram_ptr -= 1;
-    Ok((i, o))
+    interpreter
 }
 
 #[test]
@@ -105,7 +104,7 @@ fn left_a_simple_token() {
         program_ptr: 0,
         stack: vec![],
     };
-    left(&mut interpreter, "<".as_bytes());
+    left(interpreter);
 }
 
 #[test]
@@ -118,23 +117,19 @@ fn left_go_to_right_and_go_back_to_left() {
         stack: vec![],
     };
 
-    let (i1, o1) = right(&mut interpreter, "><".as_bytes()).expect("Something went wrong:");
-
-    assert_eq!(i1, "<".as_bytes());
+    let mut interpreter = right(interpreter);
     assert_eq!(interpreter.ram_ptr, 1);
 
-    assert_eq!(left(&mut interpreter, i1), Ok(("".as_bytes(), "<".as_bytes())));
+    let mut interpreter = left(interpreter);
     assert_eq!(interpreter.ram_ptr, 0);
 }
 
 
-fn increment<'program, 'func>(interpreter: &'func mut Interpreter, input: &'program [u8]) -> nom::IResult<&'program [u8], &'program [u8], u32> {
-    let (i, o) = try_parse!(input, tag!("+"));
-
+fn increment(interpreter: Interpreter) -> Interpreter {
+    let mut interpreter = interpreter;
     let current_cell: &mut i32 = &mut interpreter.ram[interpreter.ram_ptr];
     *current_cell += 1;
-
-    Ok((i, o))
+    interpreter
 }
 
 #[test]
@@ -147,20 +142,18 @@ fn increment_single_token() {
         stack: vec![],
     };
 
-    assert_eq!(increment(&mut interpreter, "+".as_bytes()), Ok(("".as_bytes(), "+".as_bytes())));
+    let mut interpreter = increment(interpreter);
 
     let current_cell: i32 = interpreter.ram[interpreter.ram_ptr];
-
     assert_eq!(current_cell, 1);
 }
 
-fn decrement<'program, 'func>(interpreter: &'func mut Interpreter, input: &'program [u8]) -> nom::IResult<&'program [u8], &'program [u8], u32> {
-    let (i, o) = try_parse!(input, tag!("-"));
+fn decrement(interpreter: Interpreter) -> Interpreter {
+    let mut interpreter = interpreter;
 
     let current_cell: &mut i32 = &mut interpreter.ram[interpreter.ram_ptr];
     *current_cell -= 1;
-
-    Ok((i, o))
+    interpreter
 }
 
 #[test]
@@ -173,54 +166,145 @@ fn decrement_single_token() {
         stack: vec![],
     };
 
-    assert_eq!(decrement(&mut interpreter, "-".as_bytes()), Ok(("".as_bytes(), "-".as_bytes())));
+    let mut interpreter = decrement(interpreter);
 
     let current_cell: i32 = interpreter.ram[interpreter.ram_ptr];
 
     assert_eq!(current_cell, -1);
 }
 
-fn reach_the_matching_bracket<'program, 'func>(interpreter: &'func  mut Interpreter, input: &'program [u8]) -> nom::IResult<&'program [u8], &'program [u8], u32> {
-    unimplemented!()
-}
-
-fn loop_beginning(interpreter: &mut Interpreter) {
+fn loop_beginning(interpreter: Interpreter) -> Interpreter {
     let current_cell = interpreter.ram[interpreter.ram_ptr];
-
+    let mut interpreter = interpreter;
+    // false
     if current_cell == 0 {
+        // A bracket is already opened.
         let mut opened_bracket_counter = 1;
         while opened_bracket_counter > 0 {
-            let current_character = interpreter.program[interpreter.program_ptr] as char;
-            if current_character == '[' {
-                opened_bracket_counter += 1;
-            }
-            else if current_character == ']' {
-                opened_bracket_counter -= 1;
-            }
-            std::dbg!(interpreter.program_ptr += 1);
+            interpreter.program_ptr = {
+                interpreter.program_ptr += 1;
+                debug_assert!(interpreter.program_ptr < interpreter.program.len());
+                let current_character = interpreter.program[interpreter.program_ptr] as char;
+                if current_character == '[' {
+                    opened_bracket_counter += 1;
+                }
+                else if current_character == ']' {
+                    opened_bracket_counter -= 1;
+                }
+                let program_ptr: &usize = &interpreter.program_ptr;
+                std::dbg!(interpreter.program_ptr);
+                interpreter.program_ptr
+            };
         }
+        return interpreter;
     }
-    else {
-        interpreter.stack.push(interpreter.program_ptr);
-    }
+    // true
+    interpreter.stack.push(interpreter.program_ptr);
+    interpreter
 }
 
-fn loop_ending(interpreter: &mut Interpreter, input: &[u8]) {
+#[test]
+fn loop_beginning_empty_loop_and_cell_equals_zero() {
+    let mut interpreter = Interpreter {
+        ram: [0; 30_000],
+        ram_ptr: 0,
+        program: "[]".as_bytes(),
+        program_ptr: 0,
+        stack: vec![]
+    };
+    let mut interpreter = loop_beginning(interpreter);
+    assert_eq!(interpreter.program_ptr, interpreter.program.len() - 1);
+    let current_cell = interpreter.ram[interpreter.ram_ptr];
+    assert_eq!(current_cell, 0);
+}
+
+#[test]
+fn loop_beginning_3_empty_nested_loop_1_level_of_imbrication() {
+    let mut interpreter = Interpreter {
+        ram: [0; 30_000],
+        ram_ptr: 0,
+        program: "[[][]]".as_bytes(),
+        program_ptr: 0,
+        stack: vec![]
+    };
+    let mut interpreter = loop_beginning(interpreter);
+    assert_eq!(interpreter.program_ptr, interpreter.program.len() - 1);
+    let current_cell = interpreter.ram[interpreter.ram_ptr];
+    assert_eq!(current_cell, 0);
+}
+
+#[test]
+fn loop_beginning_3_empty_nested_loop_2_level_of_imbrication() {
+    let mut interpreter = Interpreter {
+        ram: [0; 30_000],
+        ram_ptr: 0,
+        program: "[[[]]]".as_bytes(),
+        program_ptr: 0,
+        stack: vec![]
+    };
+    let mut interpreter = loop_beginning(interpreter);
+    assert_eq!(interpreter.program_ptr, interpreter.program.len() - 1);
+    let current_cell = interpreter.ram[interpreter.ram_ptr];
+    assert_eq!(current_cell, 0);
+}
+
+/*#[test]
+fn loop_beginning_1_active_loop_and_1_empty_loop_1_level_of_imbrication() {
+    let mut interpreter = Interpreter {
+        ram: [0; 30_000],
+        ram_ptr: 0,
+        program: "+[[]]".as_bytes(),
+        program_ptr: 0,
+        stack: vec![]
+    };
+}*/
+
+fn loop_ending(interpreter: Interpreter) -> Interpreter {
+    let mut interpreter = interpreter;
     let current_cell = interpreter.ram[interpreter.ram_ptr];
 
-    if current_cell > 0 {
-        let topmost_position = interpreter.stack[0];
-        interpreter.program_ptr = topmost_position;
+    interpreter.program_ptr = if current_cell != 0 {
+        let topmost_position = interpreter.stack.pop();
+        debug_assert_eq!(topmost_position.is_some(), true);
+        let topmost_position = topmost_position.unwrap();
+        topmost_position
     }
     else {
         interpreter.stack.pop();
-    }
+        interpreter.program_ptr
+    };
+
+    interpreter
+
+    // "++[+++[---][>>++]]"
+    // [2, 6,
 }
 
-fn loop_<'program, 'func>(interpreter: &'func mut Interpreter, input: &'program [u8]) -> nom::IResult<&'program [u8], &'program [u8], u32> {
+#[test]
+fn loop_ending_integration_with_loop_beginning_single_loop() {
+    let interpreter = Interpreter {
+        ram: [0; 30_000],
+        ram_ptr: 0,
+        program: "+[]".as_bytes(),
+        program_ptr: 0,
+        stack: vec![]
+    };
 
-    unimplemented!()
+    let mut interpreter = increment(interpreter);
+    let current_cell = interpreter.ram[interpreter.ram_ptr];
+    assert_eq!(current_cell, 1);
+    // We do the work of `run()` for test purpose only.
+    interpreter.program_ptr += 1;
+
+    let mut interpreter = loop_beginning(interpreter);
+    assert_eq!(interpreter.program_ptr, 1);
+    assert_eq!(interpreter.stack, vec![1]);
+
+    let interpreter = loop_ending(interpreter);
+    assert_eq!(interpreter.program_ptr, 1);
+    assert_eq!(interpreter.stack.is_empty(), true);
 }
+
 fn print(input: &[u8]) -> nom::IResult<&[u8], (), u32> { unimplemented!() }
 fn feed(input: &[u8]) -> nom::IResult<&[u8], (), u32> { unimplemented!() }
 
