@@ -2,47 +2,6 @@ use std::fmt;
 
 use nom::{is_alphanumeric, AsBytes};
 
-pub enum ReservedWord {
-    /// `>`
-    GreaterThanSign,
-    /// `<`
-    LowerThanSign,
-    /// `+`
-    PlusSign,
-    /// `-`
-    MinusSign,
-    /// `[`
-    LeftSquareBracket,
-    /// `]`
-    RightSquareBracket,
-    /// A simple point `.`.
-    FullStop,
-    /// `,`
-    Comma,
-}
-
-
-impl ReservedWord {
-    pub fn to_char(&self) -> char {
-        match self {
-            ReservedWord::GreaterThanSign => '>',
-            ReservedWord::LowerThanSign => '<',
-            ReservedWord::PlusSign => '+',
-            ReservedWord::MinusSign => '-',
-            ReservedWord::LeftSquareBracket => '[',
-            ReservedWord::RightSquareBracket => ']',
-            ReservedWord::FullStop => '.',
-            ReservedWord::Comma => ',',
-        }
-    }
-}
-
-impl fmt::Display for ReservedWord {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.to_char())
-    }
-}
-
 struct Interpreter<'program> {
     /// The program data.
     ram: [i32; 30_000],
