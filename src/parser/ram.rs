@@ -64,3 +64,52 @@ fn left_go_to_right_and_go_back_to_left() {
     let mut interpreter = left(interpreter);
     assert_eq!(interpreter.ram_ptr, 0);
 }
+
+
+fn increment(interpreter: ast::Interpreter) -> ast::Interpreter {
+    let mut interpreter = interpreter;
+    let current_cell: &mut i32 = &mut interpreter.ram[interpreter.ram_ptr];
+    *current_cell += 1;
+    interpreter
+}
+
+#[test]
+fn increment_single_token() {
+    let mut interpreter = ast::Interpreter {
+        ram: [0; 30_000],
+        ram_ptr: 0,
+        program: "+".as_bytes(),
+        program_ptr: 0,
+        stack: vec![],
+    };
+
+    let mut interpreter = increment(interpreter);
+
+    let current_cell: i32 = interpreter.ram[interpreter.ram_ptr];
+    assert_eq!(current_cell, 1);
+}
+
+fn decrement(interpreter: ast::Interpreter) -> ast::Interpreter {
+    let mut interpreter = interpreter;
+
+    let current_cell: &mut i32 = &mut interpreter.ram[interpreter.ram_ptr];
+    *current_cell -= 1;
+    interpreter
+}
+
+#[test]
+fn decrement_single_token() {
+    let mut interpreter = ast::Interpreter {
+        ram: [0; 30_000],
+        ram_ptr: 0,
+        program: "-".as_bytes(),
+        program_ptr: 0,
+        stack: vec![],
+    };
+
+    let mut interpreter = decrement(interpreter);
+
+    let current_cell: i32 = interpreter.ram[interpreter.ram_ptr];
+
+    assert_eq!(current_cell, -1);
+}
