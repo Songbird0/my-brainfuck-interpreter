@@ -28,6 +28,27 @@ fn loop_beginning(interpreter: ast::Interpreter) -> ast::Interpreter {
     interpreter
 }
 
+fn loop_ending(interpreter: ast::Interpreter) -> ast::Interpreter {
+    let mut interpreter = interpreter;
+    let current_cell = interpreter.ram[interpreter.ram_ptr];
+
+    interpreter.program_ptr = if current_cell != 0 {
+        let topmost_position = interpreter.stack.pop();
+        debug_assert_eq!(topmost_position.is_some(), true);
+        let topmost_position = topmost_position.unwrap();
+        topmost_position
+    }
+    else {
+        interpreter.stack.pop();
+        interpreter.program_ptr
+    };
+
+    interpreter
+
+    // "++[+++[---][>>++]]"
+    // [2, 6,
+}
+
 #[test]
 fn loop_beginning_empty_loop_and_cell_equals_zero() {
     let mut interpreter = ast::Interpreter {
@@ -71,38 +92,6 @@ fn loop_beginning_3_empty_nested_loop_2_level_of_imbrication() {
     assert_eq!(interpreter.program_ptr, interpreter.program.len() - 1);
     let current_cell = interpreter.ram[interpreter.ram_ptr];
     assert_eq!(current_cell, 0);
-}
-
-/*#[test]
-fn loop_beginning_1_active_loop_and_1_empty_loop_1_level_of_imbrication() {
-    let mut interpreter = ast::Interpreter {
-        ram: [0; 30_000],
-        ram_ptr: 0,
-        program: "+[[]]".as_bytes(),
-        program_ptr: 0,
-        stack: vec![]
-    };
-}*/
-
-fn loop_ending(interpreter: ast::Interpreter) -> ast::Interpreter {
-    let mut interpreter = interpreter;
-    let current_cell = interpreter.ram[interpreter.ram_ptr];
-
-    interpreter.program_ptr = if current_cell != 0 {
-        let topmost_position = interpreter.stack.pop();
-        debug_assert_eq!(topmost_position.is_some(), true);
-        let topmost_position = topmost_position.unwrap();
-        topmost_position
-    }
-    else {
-        interpreter.stack.pop();
-        interpreter.program_ptr
-    };
-
-    interpreter
-
-    // "++[+++[---][>>++]]"
-    // [2, 6,
 }
 
 #[test]

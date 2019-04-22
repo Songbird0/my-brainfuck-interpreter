@@ -7,6 +7,16 @@ fn right(interpreter: ast::Interpreter) -> ast::Interpreter {
     interpreter
 }
 
+fn left(interpreter: ast::Interpreter) -> ast::Interpreter {
+    if interpreter.ram_ptr == 0 {
+        // We cannot decrement `ptr` anymore.
+        panic!("Your pointer is out of bound (negative)");
+    }
+    let mut interpreter = interpreter;
+    interpreter.ram_ptr -= 1;
+    interpreter
+}
+
 #[test]
 fn right_a_simple_token() {
     // note: the entire program is reduced
@@ -25,16 +35,6 @@ fn right_a_simple_token() {
 
     let mut interpreter = right(interpreter);
     assert_eq!(interpreter.ram_ptr, 1);
-}
-
-fn left(interpreter: ast::Interpreter) -> ast::Interpreter {
-    if interpreter.ram_ptr == 0 {
-        // We cannot decrement `ptr` anymore.
-        panic!("Your pointer is out of bound (negative)");
-    }
-    let mut interpreter = interpreter;
-    interpreter.ram_ptr -= 1;
-    interpreter
 }
 
 #[test]
@@ -75,6 +75,14 @@ fn increment(interpreter: ast::Interpreter) -> ast::Interpreter {
     interpreter
 }
 
+fn decrement(interpreter: ast::Interpreter) -> ast::Interpreter {
+    let mut interpreter = interpreter;
+
+    let current_cell: &mut i32 = &mut interpreter.ram[interpreter.ram_ptr];
+    *current_cell -= 1;
+    interpreter
+}
+
 #[test]
 fn increment_single_token() {
     let mut interpreter = ast::Interpreter {
@@ -89,14 +97,6 @@ fn increment_single_token() {
 
     let current_cell: i32 = interpreter.ram[interpreter.ram_ptr];
     assert_eq!(current_cell, 1);
-}
-
-fn decrement(interpreter: ast::Interpreter) -> ast::Interpreter {
-    let mut interpreter = interpreter;
-
-    let current_cell: &mut i32 = &mut interpreter.ram[interpreter.ram_ptr];
-    *current_cell -= 1;
-    interpreter
 }
 
 #[test]
