@@ -1,23 +1,12 @@
+pub mod ast;
+
 use std::fmt;
 
 use nom::{is_alphanumeric, AsBytes};
 
-struct Interpreter<'program> {
-    /// The program data.
-    ram: [i32; 30_000],
-    /// A pointer to access to the program data.
-    ram_ptr: usize,
-    /// Our input (a file, for example).
-    program: &'program [u8],
-    /// A pointer to read each character.
-    program_ptr: usize,
-    /// To resolve the loops.
-    stack: Vec<usize>
-}
-
 
 /// "Moves" the pointer to the right.
-fn right(interpreter: Interpreter) -> Interpreter {
+fn right(interpreter: ast::Interpreter) -> ast::Interpreter {
     let mut interpreter = interpreter;
     interpreter.ram_ptr += 1;
     interpreter
@@ -31,7 +20,7 @@ fn right_a_simple_token() {
     // Actually, the `right()` parser shouldn't
     // have access to `program` directly but
     // a sub-stream instead.
-    let mut interpreter = Interpreter {
+    let mut interpreter = ast::Interpreter {
         ram: [0; 30_000],
         ram_ptr: 0,
         program: ">".as_bytes(),
@@ -43,7 +32,7 @@ fn right_a_simple_token() {
     assert_eq!(interpreter.ram_ptr, 1);
 }
 
-fn left(interpreter: Interpreter) -> Interpreter {
+fn left(interpreter: ast::Interpreter) -> ast::Interpreter {
     if interpreter.ram_ptr == 0 {
         // We cannot decrement `ptr` anymore.
         panic!("Your pointer is out of bound (negative)");
@@ -56,7 +45,7 @@ fn left(interpreter: Interpreter) -> Interpreter {
 #[test]
 #[should_panic="Your pointer is out of bound (negative)"]
 fn left_a_simple_token() {
-    let mut interpreter = Interpreter {
+    let mut interpreter = ast::Interpreter {
         ram: [0; 30_000],
         ram_ptr: 0,
         program: "<".as_bytes(),
@@ -68,7 +57,7 @@ fn left_a_simple_token() {
 
 #[test]
 fn left_go_to_right_and_go_back_to_left() {
-    let mut interpreter = Interpreter {
+    let mut interpreter = ast::Interpreter {
         ram: [0; 30_000],
         ram_ptr: 0,
         program: "><".as_bytes(),
@@ -84,7 +73,7 @@ fn left_go_to_right_and_go_back_to_left() {
 }
 
 
-fn increment(interpreter: Interpreter) -> Interpreter {
+fn increment(interpreter: ast::Interpreter) -> ast::Interpreter {
     let mut interpreter = interpreter;
     let current_cell: &mut i32 = &mut interpreter.ram[interpreter.ram_ptr];
     *current_cell += 1;
@@ -93,7 +82,7 @@ fn increment(interpreter: Interpreter) -> Interpreter {
 
 #[test]
 fn increment_single_token() {
-    let mut interpreter = Interpreter {
+    let mut interpreter = ast::Interpreter {
         ram: [0; 30_000],
         ram_ptr: 0,
         program: "+".as_bytes(),
@@ -107,7 +96,7 @@ fn increment_single_token() {
     assert_eq!(current_cell, 1);
 }
 
-fn decrement(interpreter: Interpreter) -> Interpreter {
+fn decrement(interpreter: ast::Interpreter) -> ast::Interpreter {
     let mut interpreter = interpreter;
 
     let current_cell: &mut i32 = &mut interpreter.ram[interpreter.ram_ptr];
@@ -117,7 +106,7 @@ fn decrement(interpreter: Interpreter) -> Interpreter {
 
 #[test]
 fn decrement_single_token() {
-    let mut interpreter = Interpreter {
+    let mut interpreter = ast::Interpreter {
         ram: [0; 30_000],
         ram_ptr: 0,
         program: "-".as_bytes(),
@@ -132,7 +121,7 @@ fn decrement_single_token() {
     assert_eq!(current_cell, -1);
 }
 
-fn loop_beginning(interpreter: Interpreter) -> Interpreter {
+fn loop_beginning(interpreter: ast::Interpreter) -> ast::Interpreter {
     let current_cell = interpreter.ram[interpreter.ram_ptr];
     let mut interpreter = interpreter;
     // false
@@ -164,7 +153,7 @@ fn loop_beginning(interpreter: Interpreter) -> Interpreter {
 
 #[test]
 fn loop_beginning_empty_loop_and_cell_equals_zero() {
-    let mut interpreter = Interpreter {
+    let mut interpreter = ast::Interpreter {
         ram: [0; 30_000],
         ram_ptr: 0,
         program: "[]".as_bytes(),
@@ -179,7 +168,7 @@ fn loop_beginning_empty_loop_and_cell_equals_zero() {
 
 #[test]
 fn loop_beginning_3_empty_nested_loop_1_level_of_imbrication() {
-    let mut interpreter = Interpreter {
+    let mut interpreter = ast::Interpreter {
         ram: [0; 30_000],
         ram_ptr: 0,
         program: "[[][]]".as_bytes(),
@@ -194,7 +183,7 @@ fn loop_beginning_3_empty_nested_loop_1_level_of_imbrication() {
 
 #[test]
 fn loop_beginning_3_empty_nested_loop_2_level_of_imbrication() {
-    let mut interpreter = Interpreter {
+    let mut interpreter = ast::Interpreter {
         ram: [0; 30_000],
         ram_ptr: 0,
         program: "[[[]]]".as_bytes(),
@@ -209,7 +198,7 @@ fn loop_beginning_3_empty_nested_loop_2_level_of_imbrication() {
 
 /*#[test]
 fn loop_beginning_1_active_loop_and_1_empty_loop_1_level_of_imbrication() {
-    let mut interpreter = Interpreter {
+    let mut interpreter = ast::Interpreter {
         ram: [0; 30_000],
         ram_ptr: 0,
         program: "+[[]]".as_bytes(),
@@ -218,7 +207,7 @@ fn loop_beginning_1_active_loop_and_1_empty_loop_1_level_of_imbrication() {
     };
 }*/
 
-fn loop_ending(interpreter: Interpreter) -> Interpreter {
+fn loop_ending(interpreter: ast::Interpreter) -> ast::Interpreter {
     let mut interpreter = interpreter;
     let current_cell = interpreter.ram[interpreter.ram_ptr];
 
@@ -241,7 +230,7 @@ fn loop_ending(interpreter: Interpreter) -> Interpreter {
 
 #[test]
 fn loop_ending_integration_with_loop_beginning_single_loop() {
-    let interpreter = Interpreter {
+    let interpreter = ast::Interpreter {
         ram: [0; 30_000],
         ram_ptr: 0,
         program: "+[]".as_bytes(),
