@@ -1,3 +1,3 @@
 pub mod ast;
-pub mod ram;
 pub mod io;
+pub mod ram;

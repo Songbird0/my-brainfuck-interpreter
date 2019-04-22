@@ -38,7 +38,7 @@ fn right_a_simple_token() {
 }
 
 #[test]
-#[should_panic="Your pointer is out of bound (negative)"]
+#[should_panic = "Your pointer is out of bound (negative)"]
 fn left_a_simple_token() {
     let mut interpreter = ast::Interpreter {
         ram: [0; 30_000],
@@ -66,7 +66,6 @@ fn left_go_to_right_and_go_back_to_left() {
     let mut interpreter = left(interpreter);
     assert_eq!(interpreter.ram_ptr, 0);
 }
-
 
 fn increment(interpreter: ast::Interpreter) -> ast::Interpreter {
     let mut interpreter = interpreter;

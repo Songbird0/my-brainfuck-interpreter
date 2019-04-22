@@ -8,5 +8,5 @@ pub struct Interpreter<'program> {
     /// A pointer to read each character.
     pub program_ptr: usize,
     /// To resolve the loops.
-    pub stack: Vec<usize>
+    pub stack: Vec<usize>,
 }

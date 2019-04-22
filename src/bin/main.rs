@@ -3,5 +3,4 @@ extern crate nom;
 
 extern crate brainfuck_interpreter;
 
-fn main() {
-}
+fn main() {}
