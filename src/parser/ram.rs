@@ -1,3 +1,5 @@
+use crate::parser::ast;
+
 /// "Moves" the pointer to the right.
 fn right(interpreter: ast::Interpreter) -> ast::Interpreter {
     let mut interpreter = interpreter;
