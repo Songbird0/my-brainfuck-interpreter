@@ -103,3 +103,21 @@ fn print_the_character_b() {
         interpreter
     }
 }
+
+#[test]
+fn feed_single_token() {
+    let interpreter: Interpreter = Interpreter {
+        ram: [0; 30_000],
+        ram_ptr: 0,
+        program: ",".as_bytes(),
+        program_ptr: 0,
+        stack: vec![]
+    };
+
+    let interpreter = feed(interpreter);
+    let current_cell = interpreter.ram[interpreter.ram_ptr];
+    // 'b'
+    let b_unicode_number = 0x62;
+
+    assert_eq!(current_cell, b_unicode_number);
+}
