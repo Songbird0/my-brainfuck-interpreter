@@ -6,7 +6,7 @@ use crate::parser::ast::Interpreter;
 /// ## Attention
 ///
 /// Be sure that your cell doesn't contain a negative value.
-///// You could have an invalid character otherwise.
+/// You could have an invalid character otherwise.
 fn print(interpreter: Interpreter) -> Interpreter {
     let current_cell = interpreter.ram[interpreter.ram_ptr];
     debug_assert!(current_cell >= 0, "`current_cell` is negative");
