@@ -1,3 +1,5 @@
+use std::io::{self, Read};
+
 use crate::parser::ast::Interpreter;
 
 
@@ -16,10 +18,42 @@ pub fn print(interpreter: Interpreter) -> Interpreter {
     interpreter
 }
 
-fn feed(interpreter: Interpreter) -> Interpreter {
-//    let mut interpreter = interpreter;
-//    let current_cell: &i32 = &mut interpreter.ram[interpreter.ram_ptr];
-    unimplemented!()
+/// Takes a number (as string) from stdin.
+///
+/// ## Attention
+///
+/// The interpreter will consume the number 'as is' not
+/// byte by byte.
+///
+/// ### Example:
+///
+/// ```text
+/// 1500
+/// ```
+///
+/// It will be consumed as `1500`, not `1`, `5`, `0`, `0`.
+pub fn feed(interpreter: Interpreter) -> Interpreter {
+    let mut raw_input: String = String::new();
+
+    io::stdin().read_line(&mut raw_input).expect("Something went wrong while the stdin reading:");
+
+    let value: Result<i32, String> = raw_input.trim().parse().map_err(|e| {
+        eprintln!("An error occurred while parsing your integer.\
+        See below for more:\n{:#?}\n\
+        The current cell value is untouched.", e);
+        "parsing_error".to_owned()
+    });
+
+    if let Ok(number) = value {
+        let mut interpreter = interpreter;
+        let current_cell: &mut i32 = &mut interpreter.ram[interpreter.ram_ptr];
+
+        *current_cell = number;
+
+        return interpreter;
+    }
+
+    interpreter
 }
 
 #[test]
