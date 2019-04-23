@@ -1,4 +1,7 @@
-fn loop_beginning(interpreter: ast::Interpreter) -> ast::Interpreter {
+use crate::parser::ast;
+use crate::parser::ram;
+
+pub fn loop_beginning(interpreter: ast::Interpreter) -> ast::Interpreter {
     let current_cell = interpreter.ram[interpreter.ram_ptr];
     let mut interpreter = interpreter;
     // false
@@ -28,7 +31,7 @@ fn loop_beginning(interpreter: ast::Interpreter) -> ast::Interpreter {
     interpreter
 }
 
-fn loop_ending(interpreter: ast::Interpreter) -> ast::Interpreter {
+pub fn loop_ending(interpreter: ast::Interpreter) -> ast::Interpreter {
     let mut interpreter = interpreter;
     let current_cell = interpreter.ram[interpreter.ram_ptr];
 
