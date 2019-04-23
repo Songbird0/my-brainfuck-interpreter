@@ -1,13 +1,13 @@
 use crate::parser::ast;
 
 /// "Moves" the pointer to the right.
-fn right(interpreter: ast::Interpreter) -> ast::Interpreter {
+pub fn right(interpreter: ast::Interpreter) -> ast::Interpreter {
     let mut interpreter = interpreter;
     interpreter.ram_ptr += 1;
     interpreter
 }
 
-fn left(interpreter: ast::Interpreter) -> ast::Interpreter {
+pub fn left(interpreter: ast::Interpreter) -> ast::Interpreter {
     if interpreter.ram_ptr == 0 {
         // We cannot decrement `ptr` anymore.
         panic!("Your pointer is out of bound (negative)");
@@ -67,14 +67,14 @@ fn left_go_to_right_and_go_back_to_left() {
     assert_eq!(interpreter.ram_ptr, 0);
 }
 
-fn increment(interpreter: ast::Interpreter) -> ast::Interpreter {
+pub fn increment(interpreter: ast::Interpreter) -> ast::Interpreter {
     let mut interpreter = interpreter;
     let current_cell: &mut i32 = &mut interpreter.ram[interpreter.ram_ptr];
     *current_cell += 1;
     interpreter
 }
 
-fn decrement(interpreter: ast::Interpreter) -> ast::Interpreter {
+pub fn decrement(interpreter: ast::Interpreter) -> ast::Interpreter {
     let mut interpreter = interpreter;
 
     let current_cell: &mut i32 = &mut interpreter.ram[interpreter.ram_ptr];
