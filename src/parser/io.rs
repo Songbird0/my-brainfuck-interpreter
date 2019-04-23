@@ -105,6 +105,7 @@ fn print_the_character_b() {
 }
 
 #[test]
+#[ignore]
 fn feed_single_token() {
     let interpreter: Interpreter = Interpreter {
         ram: [0; 30_000],
