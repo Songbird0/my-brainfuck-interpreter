@@ -107,7 +107,7 @@ fn loop_ending_integration_with_loop_beginning_single_loop() {
         stack: vec![]
     };
 
-    let mut interpreter = increment(interpreter);
+    let mut interpreter = ram::increment(interpreter);
     let current_cell = interpreter.ram[interpreter.ram_ptr];
     assert_eq!(current_cell, 1);
     // We do the work of `run()` for test purpose only.
