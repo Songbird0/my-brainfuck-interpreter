@@ -34,6 +34,8 @@ impl Interpreter<'static> {
                 default @ _ => panic!("Oops, unexpected token: {:#?}", default),
             };
 
+            interpreter.program_ptr += 1;
+
             if interpreter.program_ptr >= interpreter.program.len() { break; }
         }
     }
