@@ -35,15 +35,23 @@ pub fn loop_ending(interpreter: ast::Interpreter) -> ast::Interpreter {
     let mut interpreter = interpreter;
     let current_cell = interpreter.ram[interpreter.ram_ptr];
 
+    ldbg!(interpreter);
+
     interpreter.program_ptr = if current_cell != 0 {
         let topmost_position = interpreter.stack.pop();
-        debug_assert_eq!(topmost_position.is_some(), true);
+        debug_assert_eq!(topmost_position.is_some(), true,
+                         "topmost_position: {:#?}\n\
+                         interpreter.ram_ptr: {:#?}\n\
+                         interpreter.program_ptr: {:#?}",
+                         topmost_position,
+                         interpreter.ram_ptr,
+                         interpreter.program_ptr);
         let topmost_position = topmost_position.unwrap();
         topmost_position
     }
     else {
         interpreter.stack.pop();
-        interpreter.program_ptr
+        interpreter.program_ptr + 1
     };
 
     interpreter
@@ -120,4 +128,48 @@ fn loop_ending_integration_with_loop_beginning_single_loop() {
     let interpreter = loop_ending(interpreter);
     assert_eq!(interpreter.program_ptr, 1);
     assert_eq!(interpreter.stack.is_empty(), true);
+}
+
+#[test]
+fn loop_ending_integration_with_loop_beginning_nested_loop() {
+    let interpreter = ast::Interpreter {
+        ram: [0; 30_000],
+        ram_ptr: 0,
+        program: "+[[-]]".as_bytes(),
+        program_ptr: 0,
+        stack: vec![]
+    };
+
+    let mut interpreter = ram::increment(interpreter);
+    let current_cell = interpreter.ram[interpreter.ram_ptr];
+    assert_eq!(current_cell, 1);
+
+    interpreter.program_ptr += 1;
+
+    let mut interpreter = loop_beginning(interpreter);
+    assert_eq!(interpreter.program_ptr, 1);
+    assert_eq!(interpreter.stack, vec![1]);
+
+    interpreter.program_ptr += 1;
+
+    let mut interpreter = loop_beginning(interpreter);
+    assert_eq!(interpreter.program_ptr, 2);
+    assert_eq!(interpreter.stack, vec![1, 2]);
+
+    interpreter.program_ptr += 1;
+
+    let mut interpreter = ram::decrement(interpreter);
+    let current_cell = interpreter.ram[interpreter.ram_ptr];
+
+    assert_eq!(current_cell, 0);
+
+    interpreter.program_ptr += 1;
+
+    let mut interpreter = loop_ending(interpreter);
+    assert_eq!(interpreter.program_ptr, 5);
+    assert_eq!(interpreter.stack, vec![1]);
+
+    let mut interpreter = loop_ending(interpreter);
+    assert_eq!(interpreter.program_ptr, 6);
+    assert_eq!(interpreter.stack, vec![]);
 }

@@ -1,4 +1,5 @@
 use crate::parser::{io, program, ram};
+use std::fmt::{self, Debug};
 
 pub struct Interpreter<'program> {
     /// The program data.
@@ -13,15 +14,43 @@ pub struct Interpreter<'program> {
     pub stack: Vec<usize>,
 }
 
+impl<'program> fmt::Debug for Interpreter<'program> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            r#"
+Interpreter {{
+  ram: "#
+        )?;
+        self.ram[..].fmt(f);
+        write!(
+           f,
+           r#",
+  ram_ptr: {:?},
+  program: "#,
+            self.ram_ptr
+        )?;
+        self.program.fmt(f);
+        write!(
+            f,
+            r#",
+  program_ptr: {0:?},
+  stack: {1:?}
+}}"#,
+            self.program_ptr,
+            self.stack
+        )
+    }
+}
+
 impl Interpreter<'static> {
 
     pub fn run(self) {
         let mut interpreter = self;
 
-        loop {
+        'parser: loop {
 
             let current_char: char = interpreter.program[interpreter.program_ptr] as char;
-
             interpreter = match &current_char {
                 '>' => ram::right(interpreter),
                 '<' => ram::left(interpreter),
@@ -34,7 +63,12 @@ impl Interpreter<'static> {
                 default @ _ => panic!("Oops, unexpected token: {:#?}", default),
             };
 
-            interpreter.program_ptr += 1;
+            if current_char == ']' {
+                continue 'parser;
+            }
+            else {
+                interpreter.program_ptr += 1;
+            }
 
             if interpreter.program_ptr >= interpreter.program.len() { break; }
         }
