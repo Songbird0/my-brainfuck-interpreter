@@ -129,3 +129,47 @@ fn loop_ending_integration_with_loop_beginning_single_loop() {
     assert_eq!(interpreter.program_ptr, 1);
     assert_eq!(interpreter.stack.is_empty(), true);
 }
+
+#[test]
+fn loop_ending_integration_with_loop_beginning_nested_loop() {
+    let interpreter = ast::Interpreter {
+        ram: [0; 30_000],
+        ram_ptr: 0,
+        program: "+[[-]]".as_bytes(),
+        program_ptr: 0,
+        stack: vec![]
+    };
+
+    let mut interpreter = ram::increment(interpreter);
+    let current_cell = interpreter.ram[interpreter.ram_ptr];
+    assert_eq!(current_cell, 1);
+
+    interpreter.program_ptr += 1;
+
+    let mut interpreter = loop_beginning(interpreter);
+    assert_eq!(interpreter.program_ptr, 1);
+    assert_eq!(interpreter.stack, vec![1]);
+
+    interpreter.program_ptr += 1;
+
+    let mut interpreter = loop_beginning(interpreter);
+    assert_eq!(interpreter.program_ptr, 2);
+    assert_eq!(interpreter.stack, vec![1, 2]);
+
+    interpreter.program_ptr += 1;
+
+    let mut interpreter = ram::decrement(interpreter);
+    let current_cell = interpreter.ram[interpreter.ram_ptr];
+
+    assert_eq!(current_cell, 0);
+
+    interpreter.program_ptr += 1;
+
+    let mut interpreter = loop_ending(interpreter);
+    assert_eq!(interpreter.program_ptr, 5);
+    assert_eq!(interpreter.stack, vec![1]);
+
+    let mut interpreter = loop_ending(interpreter);
+    assert_eq!(interpreter.program_ptr, 6);
+    assert_eq!(interpreter.stack, vec![]);
+}
