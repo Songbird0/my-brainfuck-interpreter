@@ -35,15 +35,23 @@ pub fn loop_ending(interpreter: ast::Interpreter) -> ast::Interpreter {
     let mut interpreter = interpreter;
     let current_cell = interpreter.ram[interpreter.ram_ptr];
 
+    ldbg!(interpreter);
+
     interpreter.program_ptr = if current_cell != 0 {
         let topmost_position = interpreter.stack.pop();
-        debug_assert_eq!(topmost_position.is_some(), true);
+        debug_assert_eq!(topmost_position.is_some(), true,
+                         "topmost_position: {:#?}\n\
+                         interpreter.ram_ptr: {:#?}\n\
+                         interpreter.program_ptr: {:#?}",
+                         topmost_position,
+                         interpreter.ram_ptr,
+                         interpreter.program_ptr);
         let topmost_position = topmost_position.unwrap();
         topmost_position
     }
     else {
         interpreter.stack.pop();
-        interpreter.program_ptr
+        interpreter.program_ptr + 1
     };
 
     interpreter
